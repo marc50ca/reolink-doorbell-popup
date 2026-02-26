@@ -1,0 +1,99 @@
+blueprint:
+  name: "Reolink Doorbell — Camera Popup"
+  description: >
+    Show a live camera feed popup via Browser Mod whenever a doorbell
+    binary sensor is triggered. Includes an Open Door button and an
+    auto-dismiss timeout.
+
+    **Requires:** [Browser Mod](https://github.com/thomasloven/hass-browser_mod)
+    installed via HACS.
+  domain: automation
+  source_url: https://github.com/YOUR_USERNAME/reolink-doorbell-popup
+
+  input:
+    doorbell_sensor:
+      name: Doorbell Binary Sensor
+      description: The sensor that turns ON when the doorbell button is pressed.
+      selector:
+        entity:
+          domain: binary_sensor
+
+    camera_entity:
+      name: Camera Entity
+      description: The picture-entity camera showing the live doorbell feed.
+      selector:
+        entity:
+          domain: camera
+
+    open_door_script:
+      name: Open Door Script
+      description: Script that unlocks / opens the front door.
+      selector:
+        entity:
+          domain: script
+
+    popup_timeout:
+      name: Auto-dismiss Timeout
+      description: >
+        How many seconds the popup stays open if the user does not
+        dismiss it manually. Default is 30 seconds.
+      default: 30
+      selector:
+        number:
+          min: 5
+          max: 300
+          step: 5
+          unit_of_measurement: seconds
+          mode: slider
+
+# ── Automation body ──────────────────────────────────────────────────────────
+
+trigger:
+  - platform: state
+    entity_id: !input doorbell_sensor
+    to: "on"
+
+condition: []
+
+action:
+  - service: browser_mod.popup
+    data:
+      title: "🔔 Someone at the Front Door!"
+      dismissable: true
+      # Convert seconds → milliseconds for Browser Mod
+      timeout: "{{ (popup_timeout | int) * 1000 }}"
+      content:
+        type: vertical-stack
+        cards:
+
+          # Live camera feed
+          - type: picture-entity
+            entity: !input camera_entity
+            camera_view: live
+            show_name: false
+            show_state: false
+
+          # Action buttons
+          - type: horizontal-stack
+            cards:
+              - type: button
+                name: "Open Door"
+                icon: mdi:door-open
+                icon_height: "40px"
+                tap_action:
+                  action: call-service
+                  service: "{{ open_door_script | replace('.', '/', 1) }}"
+
+              - type: button
+                name: "Dismiss"
+                icon: mdi:close-circle-outline
+                icon_height: "40px"
+                tap_action:
+                  action: call-service
+                  service: browser_mod/close_popup
+
+variables:
+  popup_timeout: !input popup_timeout
+  open_door_script: !input open_door_script
+
+mode: single
