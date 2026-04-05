@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Doorbell Popup Setup",
+        "description": "Configure which entities trigger the popup and what action is available. Requires the browser_mod integration.",
+        "data": {
+          "person_sensor": "Person detection sensor",
+          "package_sensor": "Package detection sensor",
+          "camera": "Doorbell camera",
+          "door_script": "Open door script",
+          "timeout": "Auto-dismiss timeout"
+        }
+      }
+    },
+    "error": {
+      "entity_not_found": "Entity not found. Make sure it exists in Home Assistant."
+    },
+    "abort": {
+      "already_configured": "Doorbell Popup is already configured."
+    }
+  }
+}
